@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image to ASCII Art Converter</title>
+<style>
+  #ascii-art {
+    white-space: pre;
+    font-family: monospace;
+  }
+</style>
+</head>
+<body>
+  <h1>Image to ASCII Art Converter</h1>
+  <input type="file" id="image-input" accept="image/*">
+  <pre id="ascii-art"></pre>
+
+  <script>
+    // Function to convert image to ASCII art
+    function convertToAscii(imageFile, scale) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      const img = new Image();
+      img.onload = function() {
+        const { width, height } = img;
+        canvas.width = width / scale;
+        canvas.height = height / scale;
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        let ascii = '';
+
+        for (let i = 0; i < data.length; i += 4) {
+          const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+          const asciiChar = getAsciiChar(brightness);
+          ascii += asciiChar;
+          
+          // Add newline character at the end of each row
+          if ((i / 4 + 1) % canvas.width === 0) {
+            ascii += '\n';
+          }
+        }
+
+        document.getElementById('ascii-art').textContent = ascii;
+      };
+
+      img.src = URL.createObjectURL(imageFile);
+    }
+
+    // Function to get ASCII character based on brightness
+    function getAsciiChar(brightness) {
+      const asciiChars = ['#', 'X', '%', '&', '*', '+', '/', '(', "'"];
+      const asciiIndex = Math.floor(brightness / 32);
+      return asciiChars[asciiIndex];
+    }
+
+    // Event listener for file input change
+    document.getElementById('image-input').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      const scale = prompt('Enter the scale (integer value):', '3');
+      if (file && scale && /^\d+$/.test(scale)) {
+        convertToAscii(file, parseInt(scale, 10));
+      }
+    });
+  </script>
+  <p>Note: Zoom out if the result renders too large.</p>
+</body>
+</html>
